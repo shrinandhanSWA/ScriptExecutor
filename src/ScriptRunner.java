@@ -2,6 +2,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class ScriptRunner {
 
@@ -43,6 +47,8 @@ public class ScriptRunner {
             lastRunError = true;
           }
           setLastExitStatus(lastRunError, lastRunExitStatus);
+          running = false;
+          setExecutingStatus(running, executingStatus);
         });
     scriptExecutionInfo.add(executingStatus);
     scriptExecutionInfo.add(lastRunExitStatus);
@@ -61,9 +67,17 @@ public class ScriptRunner {
 
   private int executeScript(String text, JTextArea outputPanel, JTextArea executingStatus) {
     outputPanel.append(text);
-    // running = false;
-    // setExecutingStatus(running, executingStatus);
-    //uncomment these 2 lines later
+    running = true;
+    setExecutingStatus(running, executingStatus);
+    try {
+      File myObj = new File("foo.kts");
+      boolean created = myObj.createNewFile(); //maybe take it out later
+      FileWriter myWriter = new FileWriter("foo.kts");
+      myWriter.write(text);
+      myWriter.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
     return 0;
   }
 
