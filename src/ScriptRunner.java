@@ -3,47 +3,47 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-
-
 public class ScriptRunner {
 
   private static final int DEFAULT_WIDTH = 1000;
   private static final int DEFAULT_HEIGHT = 1000;
 
-  boolean running = false;
-
+  private boolean running = false;
+  private boolean lastRunError = false;
 
   private void display() {
     JFrame frame = new JFrame("Script Executor");
     frame.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
-    boolean lastRunError = false;
-
     Container container = frame.getContentPane();
 
-    CreateInputPanel(container);
+    JTextArea scriptInputField = CreateInputPanel(container);
 
     JTextArea scriptOutputField = createOutputPanel(container);
 
     JPanel scriptExecutionInfo = new JPanel();
-    JTextArea executingStatus =
-        new JTextArea("Is the script running?\n " + (running ? "Yes" : "No"));
+    JTextArea executingStatus = new JTextArea();
+    setExecutingStatus(running, executingStatus);
     executingStatus.setEditable(false);
-    JTextArea lastRunExitStatus =
-        new JTextArea(
-            "Did the last execution return a non-zero exit code?\n " + (lastRunError ? "Yes" : "No"));
+    JTextArea lastRunExitStatus = new JTextArea();
     lastRunExitStatus.setEditable(false);
+    setLastExitStatus(lastRunError, lastRunExitStatus);
     JButton executor = new JButton("Execute Script");
-    executor.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        //TODO: Make this action write to a file and run the script, and get the outputs
-        //This will be the model part of this system
-        scriptOutputField.setText("YAYY THIS WORKS BABYYY");
-        running = true;
-        //TODO: Update the executing boolean to be true when the button is clicked.
-      }
-    });
+    executor.addActionListener(
+        e -> {
+          // TODO: Extract this into a model class
+          scriptOutputField.setText("We should be executing the script\n");
+          running = true;
+          setExecutingStatus(running, executingStatus);
+          int status =
+              executeScript(scriptInputField.getText(), scriptOutputField, executingStatus);
+          if (status == 0) {
+            lastRunError = false;
+          } else {
+            lastRunError = true;
+          }
+          setLastExitStatus(lastRunError, lastRunExitStatus);
+        });
     scriptExecutionInfo.add(executingStatus);
     scriptExecutionInfo.add(lastRunExitStatus);
     scriptExecutionInfo.add(executor);
@@ -52,6 +52,23 @@ public class ScriptRunner {
 
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setVisible(true);
+  }
+
+  private void setLastExitStatus(boolean lastRunError, JTextArea lastRunExitStatus) {
+    lastRunExitStatus.setText(
+        "Did the last execution return a non-zero exit code?\n " + (lastRunError ? "Yes" : "No"));
+  }
+
+  private int executeScript(String text, JTextArea outputPanel, JTextArea executingStatus) {
+    outputPanel.append(text);
+    // running = false;
+    // setExecutingStatus(running, executingStatus);
+    //uncomment these 2 lines later
+    return 0;
+  }
+
+  private void setExecutingStatus(boolean running, JTextArea textArea) {
+    textArea.setText("Is the script running?\n " + (running ? "Yes" : "No"));
   }
 
   private JTextArea createOutputPanel(Container container) {
@@ -68,7 +85,7 @@ public class ScriptRunner {
     return scriptOutputField;
   }
 
-  private void CreateInputPanel(Container container) {
+  private JTextArea CreateInputPanel(Container container) {
     JPanel inputPanel = new JPanel();
     inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
     JTextField inputText = new JTextField("Input: ");
@@ -78,6 +95,7 @@ public class ScriptRunner {
     scriptField.setPreferredSize(new Dimension(400, 500)); // watch the size mates
     inputPanel.add(scriptField);
     container.add(inputPanel, BorderLayout.LINE_START);
+    return scriptField;
   }
 
   public static void main(String[] args) {
