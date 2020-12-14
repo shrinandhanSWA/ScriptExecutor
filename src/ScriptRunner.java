@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.concurrent.ExecutionException;
 
 public class ScriptRunner {
 
@@ -13,6 +14,11 @@ public class ScriptRunner {
   private boolean executing = false;
   private boolean lastRunError = false;
 
+  /* Fields used for input and output handling. */
+  private JTextArea scriptInputField;
+  private JTextArea scriptOutputField;
+
+
   private void display() {
 
     /* Creating and setting size of frame. */
@@ -21,8 +27,8 @@ public class ScriptRunner {
 
     /* Initializing input and output panels. */
     Container container = frame.getContentPane();
-    JTextArea scriptInputField = CreateInputPanel(container);
-    JTextArea scriptOutputField = createOutputPanel(container);
+    scriptInputField = CreateInputPanel(container);
+    scriptOutputField = createOutputPanel(container);
 
     /* Initializing the executable info panel. */
     JPanel scriptExecutionInfo = new JPanel();
@@ -42,6 +48,7 @@ public class ScriptRunner {
     executor.addActionListener(
         e -> {
           /* Set script executing bool to be true and update the text area. */
+          execute();
           executing = true;
           setExecutingStatus(executing, executingStatus);
 
@@ -70,6 +77,45 @@ public class ScriptRunner {
     /* Final steps of initializing the frame. */
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setVisible(true);
+  }
+
+  /* Handling the execution of the script. */
+  private void execute() {
+    SwingWorker<Boolean, Integer> worker =
+        new SwingWorker<>() {
+          @Override
+          protected Boolean doInBackground() throws Exception {
+
+            for (int i = 0; i < 30; i++) {
+              Thread.sleep(100);
+
+              publish(i);
+            }
+            return true;
+          }
+
+          @Override
+          protected void process(java.util.List<Integer> chunks) {
+            Integer last = chunks.get(chunks.size() - 1);
+            scriptOutputField.append("Last: " + last + "\n");
+          }
+
+          @Override
+          protected void done() {
+            try {
+              Boolean success = get();
+              scriptOutputField.append("Done with status: " + success + "\n");
+            } catch (InterruptedException | ExecutionException e) {
+              e.printStackTrace();
+            }
+            super.done();
+          }
+        };
+
+    worker.execute();
+
+
+
   }
 
   /* Function that sets the last exit status based on given lastRunError boolean. */
