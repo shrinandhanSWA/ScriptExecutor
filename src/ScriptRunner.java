@@ -43,7 +43,7 @@ public class ScriptRunner {
     JButton executor = new JButton("Execute Script");
     executor.addActionListener(
         e -> {
-          /* Set script executing bool to be true and update the text area. */
+          /* Execute the script. */
           execute();
         });
 
@@ -62,40 +62,53 @@ public class ScriptRunner {
 
   /* Handling the execution of the script. */
   private void execute() {
+
+    /* Create a new SwingWorker. */
     SwingWorker<Boolean, Integer> worker =
         new SwingWorker<>() {
+
+          /* Method that actually executes the script. */
           @Override
           protected Boolean doInBackground() throws Exception {
 
+            /* Update executing status and clear output field. */
             setExecutingStatus(true, executingStatus);
             scriptOutputField.setText("");
+
+            /* By default, success is true. */
             boolean success = true;
 
+            /* Execute it*/ //TODO: Do this
             for (int i = 0; i < 10; i++) {
               Thread.sleep(100);
 
               publish(i);
             }
 
+            /* Return the boolean once execution is finished. */
             return success;
           }
 
+          /* Processing the published outputs. */
           @Override
           protected void process(java.util.List<Integer> chunks) {
+            /* For now, take the last Integer and append it to output field. */
+            //Later: Go through each output, append to output field.
             Integer last = chunks.get(chunks.size() - 1);
             scriptOutputField.append("Last: " + last + "\n");
           }
 
+          /* Finishing off the execution process. */
           @Override
           protected void done() {
             try {
+              /* Get success bool, set execution info field accordingly. */
               Boolean success = get();
               setLastExitStatus(success, lastRunExitStatus);
               setExecutingStatus(false, executingStatus);
             } catch (InterruptedException | ExecutionException e) {
               e.printStackTrace();
             }
-            super.done();
           }
         };
 
