@@ -1,7 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
 public class ScriptRunner {
@@ -44,7 +46,7 @@ public class ScriptRunner {
     executor.addActionListener(
         e -> {
           /* Execute the script. */
-          execute();
+          execute(scriptInputField.getText());
         });
 
     /* Add components to panel. */
@@ -61,7 +63,10 @@ public class ScriptRunner {
   }
 
   /* Handling the execution of the script. */
-  private void execute() {
+  private void execute(String script) {
+
+    /* Write script to foo.kt*/
+    writeToFile(script);
 
     /* Create a new SwingWorker. */
     SwingWorker<Boolean, Integer> worker =
@@ -82,9 +87,11 @@ public class ScriptRunner {
             // TODO: Do this
             for (int i = 0; i < 10; i++) {
               Thread.sleep(100);
-
               publish(i);
             }
+
+            String out = getTextFromOutput();
+            scriptOutputField.append(out);
 
             /* Return the boolean once execution is finished. */
             return success;
@@ -116,30 +123,40 @@ public class ScriptRunner {
     worker.execute();
   }
 
-  /* Function that sets the last exit status based on given lastRunError boolean. */
-  private void setLastExitStatus(boolean lastRunError, JTextArea lastRunExitStatus) {
-    lastRunExitStatus.setText(
-        "Did the last execution exit normally?\n " + (lastRunError ? "Yes" : "No"));
+  private String getTextFromOutput() {
+
+    StringBuilder out = new StringBuilder();
+    try {
+      File output = new File("src/output.txt");
+      Scanner myReader = new Scanner(output);
+      while (myReader.hasNextLine()) {
+        out.append(myReader.nextLine());
+      }
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
+    return out.toString();
   }
 
-  /* Function that handles executing the script. */
-  private int executeScript(String text, JTextArea outputPanel) {
-    outputPanel.append(text); // will be changed later.
-
+  private void writeToFile(String script) {
     try {
       /* Create the file if it doesn't exits. */
-      File myObj = new File("foo.kts");
-      boolean created = myObj.createNewFile();
+      File myObj = new File("src/foo.kt");
+      myObj.createNewFile();
 
       /* Write script to the .kts file. */
-      FileWriter myWriter = new FileWriter("foo.kts");
-      myWriter.write(text);
+      FileWriter myWriter = new FileWriter("src/foo.kt");
+      myWriter.write(script);
       myWriter.close();
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
 
-    return 0; // will be changed later.
+  /* Function that sets the last exit status based on given lastRunError boolean. */
+  private void setLastExitStatus(boolean lastRunError, JTextArea lastRunExitStatus) {
+    lastRunExitStatus.setText(
+        "Did the last execution exit normally?\n " + (lastRunError ? "Yes" : "No"));
   }
 
   /* Function that sets the executing status based on given executing bool. */
