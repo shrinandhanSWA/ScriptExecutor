@@ -10,14 +10,10 @@ public class ScriptRunner {
   private static final int DEFAULT_WIDTH = 1000;
   private static final int DEFAULT_HEIGHT = 1000;
 
-  /* Booleans used in the logic of the code. */
-  private boolean executing = false;
-  private boolean lastRunError = false;
-
-  /* Fields used for input and output handling. */
-  private JTextArea scriptInputField;
+  /* Fields used for output, execution status, and exit status handling. */
   private JTextArea scriptOutputField;
-
+  private JTextArea lastRunExitStatus;
+  private JTextArea executingStatus;
 
   private void display() {
 
@@ -27,20 +23,20 @@ public class ScriptRunner {
 
     /* Initializing input and output panels. */
     Container container = frame.getContentPane();
-    scriptInputField = CreateInputPanel(container);
+    JTextArea scriptInputField = CreateInputPanel(container);
     scriptOutputField = createOutputPanel(container);
 
     /* Initializing the executable info panel. */
     JPanel scriptExecutionInfo = new JPanel();
 
     /* Creating the executing status field and initializing it. */
-    JTextArea executingStatus = new JTextArea();
-    setExecutingStatus(executing, executingStatus);
+    executingStatus = new JTextArea();
+    setExecutingStatus(false, executingStatus);
     executingStatus.setEditable(false);
 
     /* Creating the last run status field and initializing it. */
-    JTextArea lastRunExitStatus = new JTextArea();
-    setLastExitStatus(lastRunError, lastRunExitStatus);
+    lastRunExitStatus = new JTextArea();
+    setLastExitStatus(true, lastRunExitStatus);
     lastRunExitStatus.setEditable(false);
 
     /* Creating button that starts the execution of the script when clicked. */
@@ -49,21 +45,6 @@ public class ScriptRunner {
         e -> {
           /* Set script executing bool to be true and update the text area. */
           execute();
-          executing = true;
-          setExecutingStatus(executing, executingStatus);
-
-          /* Executing the script, printing its output to the output,
-          and returning the status. */
-          int status =
-              executeScript(scriptInputField.getText(), scriptOutputField, executingStatus);
-
-          /* Checking if the execution returned a status other than 0. */
-          lastRunError = status != 0;
-          setLastExitStatus(lastRunError, lastRunExitStatus);
-
-          /* Script is done executing, falsify executing field. */
-          executing = false;
-          setExecutingStatus(executing, executingStatus);
         });
 
     /* Add components to panel. */
@@ -86,12 +67,17 @@ public class ScriptRunner {
           @Override
           protected Boolean doInBackground() throws Exception {
 
-            for (int i = 0; i < 30; i++) {
+            setExecutingStatus(true, executingStatus);
+            scriptOutputField.setText("");
+            boolean success = true;
+
+            for (int i = 0; i < 10; i++) {
               Thread.sleep(100);
 
               publish(i);
             }
-            return true;
+
+            return success;
           }
 
           @Override
@@ -104,7 +90,8 @@ public class ScriptRunner {
           protected void done() {
             try {
               Boolean success = get();
-              scriptOutputField.append("Done with status: " + success + "\n");
+              setLastExitStatus(success, lastRunExitStatus);
+              setExecutingStatus(false, executingStatus);
             } catch (InterruptedException | ExecutionException e) {
               e.printStackTrace();
             }
@@ -113,20 +100,17 @@ public class ScriptRunner {
         };
 
     worker.execute();
-
-
-
   }
 
   /* Function that sets the last exit status based on given lastRunError boolean. */
   private void setLastExitStatus(boolean lastRunError, JTextArea lastRunExitStatus) {
     lastRunExitStatus.setText(
-        "Did the last execution return a non-zero exit code?\n "
+        "Did the last execution exit normally?\n "
                 + (lastRunError ? "Yes" : "No"));
   }
 
   /* Function that handles executing the script. */
-  private int executeScript(String text, JTextArea outputPanel, JTextArea executingStatus) {
+  private int executeScript(String text, JTextArea outputPanel) {
     outputPanel.append(text); // will be changed later.
 
     try {
