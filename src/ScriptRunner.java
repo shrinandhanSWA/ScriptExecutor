@@ -8,7 +8,7 @@ public class ScriptRunner {
 
   /* Defining the default width and height of the frame. */
   private static final int DEFAULT_WIDTH = 1000;
-  private static final int DEFAULT_HEIGHT = 1000;
+  private static final int DEFAULT_HEIGHT = 800;
 
   /* Fields used for output, execution status, and exit status handling. */
   private JTextArea scriptOutputField;
@@ -78,7 +78,8 @@ public class ScriptRunner {
             /* By default, success is true. */
             boolean success = true;
 
-            /* Execute it*/ //TODO: Do this
+            /* Execute it*/
+            // TODO: Do this
             for (int i = 0; i < 10; i++) {
               Thread.sleep(100);
 
@@ -93,7 +94,7 @@ public class ScriptRunner {
           @Override
           protected void process(java.util.List<Integer> chunks) {
             /* For now, take the last Integer and append it to output field. */
-            //Later: Go through each output, append to output field.
+            // Later: Go through each output, append to output field.
             Integer last = chunks.get(chunks.size() - 1);
             scriptOutputField.append("Last: " + last + "\n");
           }
@@ -118,8 +119,7 @@ public class ScriptRunner {
   /* Function that sets the last exit status based on given lastRunError boolean. */
   private void setLastExitStatus(boolean lastRunError, JTextArea lastRunExitStatus) {
     lastRunExitStatus.setText(
-        "Did the last execution exit normally?\n "
-                + (lastRunError ? "Yes" : "No"));
+        "Did the last execution exit normally?\n " + (lastRunError ? "Yes" : "No"));
   }
 
   /* Function that handles executing the script. */
@@ -144,8 +144,7 @@ public class ScriptRunner {
 
   /* Function that sets the executing status based on given executing bool. */
   private void setExecutingStatus(boolean executing, JTextArea textArea) {
-    textArea.setText(
-            "Is the script executing?\n " + (executing ? "Yes" : "No"));
+    textArea.setText("Is the script executing?\n " + (executing ? "Yes" : "No"));
   }
 
   /* Function that creates the output panel. */
@@ -163,6 +162,7 @@ public class ScriptRunner {
     JTextArea scriptOutputArea = new JTextArea("");
     scriptOutputArea.setPreferredSize(new Dimension(300, 500));
     scriptOutputArea.setEditable(false);
+    scriptOutputArea.setLineWrap(true);
 
     /* Add components to panel, and add panel to the container. */
     outputPanel.add(outputText);
@@ -184,13 +184,21 @@ public class ScriptRunner {
     JTextField inputText = new JTextField("Input: ");
     inputText.setEditable(false);
 
-    /* Create script output text area. */
+    /* Create script input text area. */
     JTextArea scriptArea = new JTextArea("");
     scriptArea.setPreferredSize(new Dimension(400, 500));
+    scriptArea.setLineWrap(true);
+
+    /* Create scroll component for input field. */
+    JScrollPane inputScroll =
+        new JScrollPane(
+            scriptArea,
+            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
     /* Add components to panel, and add panel to the container. */
     inputPanel.add(inputText);
-    inputPanel.add(scriptArea);
+    inputPanel.add(inputScroll);
     container.add(inputPanel, BorderLayout.LINE_START);
 
     /* Return the input field text area to be used later. */
